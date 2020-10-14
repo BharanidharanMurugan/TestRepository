@@ -1,24 +1,46 @@
 import os
-import read_vault_secrets
-from jumpssh import SSHSession
-import pandas as pd
-import requests
-import time
+import sys
 import ldap
-import json
+# sudo apt-get install libsasl2-dev python-dev libldap2-dev libssl-dev before sudo pip install python-ldap and sudo pip install github3
+import pandas as pd
+#from github3 import enterprise_login
+from requests import put
 import logging
 
-_GHE_INSTANCE = os.environ['GHE_INSTANCE']
 
+class Suspender:
 
-def write_to_file(filename, data):
-    f = open(filename, "w")
-    f.write(data)
+    def __init__(self, ldap_url, ldap_password, should_verify=False):
+        #self.hub = enterprise_login(token=access_token, url=url)
+        self.ldap = ldap.initialize(ldap_url)
+        self.ldap.simple_bind_s(
+            "uid=s-cicdjen-u-itsehbg,ou=People,ou=EU,o=ikea.com", ldap_password)
+
+    def is_active_on_ad(self):
+        user_login = 'bhdha2'
+        is_active=False
+        ldap_base = "o=ikea.com"
+        #query = "(|(ikealegacyuid="+str(user_login)+")(uid="+str(user_login).replace("-",".")+"))"
+        query = "(|(ikealegacyuid={})(uid={}))".format(user_login, user_login.replace("-", "."))
+        searchAttribute=['ikealegacyuid', 'ikeastatus']
+        result= self.ldap.search_s(ldap_base, ldap.SCOPE_SUBTREE, query, searchAttribute)
+        print(type(result))
+        print(result)
+        if "'ikeastatus': [b'ACTIVE']" in str(result):
+           is_active=True
+        return is_active
+
+    def suspend_user(self, user):
+        return 200
+
+if __name__ == '__main__':
+    should_verify = False
+    logging.basicConfig(level=logging.WARNING, filename='users_to_suspend.log')
+    ldap_url = 'ldaps://cdsp.ikea.com'
+    ldap_password = os.environ['ldap-password']
+    if ldap_password :
+        s = Suspender(ldap_url,ldap_password, should_verify)
+        s.is_active_on_ad()
+    f = open('test.txt', "w")
+    f.write('data')
     f.close()
-    return filename
-   
-   
-print(_GHE_INSTANCE)
-write_to_file('test.txt', _GHE_INSTANCE)
-    
-    
