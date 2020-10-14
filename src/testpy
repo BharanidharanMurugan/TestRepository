@@ -1,0 +1,24 @@
+import os
+import read_vault_secrets
+from jumpssh import SSHSession
+import pandas as pd
+import requests
+import time
+import ldap
+import json
+import logging
+
+_GHE_INSTANCE = os.environ['GHE_INSTANCE']
+
+
+def write_to_file(filename, data):
+    f = open(filename, "w")
+    f.write(data)
+    f.close()
+    return filename
+   
+   
+print(_GHE_INSTANCE)
+write_to_file('test.txt', _GHE_INSTANCE)
+    
+    
